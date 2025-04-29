@@ -74,7 +74,7 @@ class MissAV : AnimeHttpSource(), ConfigurableAnimeSource {
         val url = baseUrl.toHttpUrl().newBuilder().apply {
             val genre = filters.firstInstanceOrNull<GenreList>()?.selected
             if (query.isNotEmpty()) {
-                addEncodedPathSegments("en/search")
+                addEncodedPathSegments("cn/search")
                 addPathSegment(query.trim())
             } else if (genre != null) {
                 addEncodedPathSegments(genre)
@@ -102,7 +102,11 @@ class MissAV : AnimeHttpSource(), ConfigurableAnimeSource {
 
         return SAnime.create().apply {
             title = document.selectFirst("h1.text-base")!!.text()
-            genre = document.getInfo("/genres/")
+            genre = listOfNotNull(
+                document.getInfo("/genres/"),
+                document.getInfo("/chinese-subtitle"),
+                document.getInfo("/english-subtitle"),
+            ).joinToString()
             author = listOfNotNull(
                 document.getInfo("/directors/"),
                 document.getInfo("/makers/"),
