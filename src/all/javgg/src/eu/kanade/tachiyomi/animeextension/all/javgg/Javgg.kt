@@ -182,33 +182,24 @@ class Javgg : ConfigurableAnimeSource, AnimeHttpSource() {
 
         val date = document.selectFirst(".extra span.date")?.text()?.parseDate() ?: 0L
         val url = document.location()
-        val firstTitle = ep.firstOrNull()?.selectFirst("span.title")?.text()?.trim()
-
-        return if (firstTitle == "Part 1") {
-            listOf(
-                SEpisode.create().apply {
-                    name = "Episode 1"
-                    episode_number = 1F
-                    date_upload = date
-                    setUrlWithoutDomain(url)
-                },
-                SEpisode.create().apply {
-                    name = "Episode 2"
-                    episode_number = 2F
-                    date_upload = date
-                    setUrlWithoutDomain(url)
-                },
-            )
-        } else {
-            listOf(
-                SEpisode.create().apply {
-                    name = "Episode 1"
-                    episode_number = 1F
-                    date_upload = date
-                    setUrlWithoutDomain(url)
-                },
-            )
+        val firstTitle = ep.lastOrNull()?.selectFirst("span.title")?.text()?.trim()
+        val partMatch = firstTitle?.let { Regex("Part\\s*(\\d+)", RegexOption.IGNORE_CASE).find(it) }
+        if (partMatch != null) {
+            val count = partMatch.groupValues.getOrNull(1)?.toIntOrNull() ?: 1
+            return (1..count).map { idx ->
+                episodeFromElement(url, idx).apply { date_upload = date }
+            }
         }
+        val template = ep.first() ?: return emptyList()
+        return listOf(episodeFromElement(url, 1).apply { date_upload = date })
+    }
+
+    private fun episodeFromElement(pageUrl: String, overrideNumber: Int? = null) = SEpisode.create().apply {
+        val num = overrideNumber?.toFloat() ?: 1F
+        episode_number = num
+        name = "Episode ${num.toInt()}"
+        val uniqueUrl = if (overrideNumber != null) "$pageUrl#${num.toInt()}" else pageUrl
+        setUrlWithoutDomain(uniqueUrl)
     }
 
     override fun videoListParse(response: Response): List<Video> {
