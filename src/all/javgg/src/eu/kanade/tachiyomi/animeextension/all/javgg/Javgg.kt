@@ -67,7 +67,7 @@ class Javgg : ConfigurableAnimeSource, AnimeHttpSource() {
         val document = response.asJsoup()
         val animeDetails = SAnime.create().apply {
             status = SAnime.COMPLETED
-            description = document.selectFirst("#cover p")?.text()
+            description = document.select("#cover p").joinToString { it.text() }
         }
 
         document.select(".data .boxye2").forEach { element ->
