@@ -170,6 +170,16 @@ class Javgg : ConfigurableAnimeSource, AnimeHttpSource() {
                             ?: element.selectFirst(".poster")?.getImageUrl()
                     }
                 }
+                    ?: element.selectFirst(".image img")?.let { img ->
+                        val lazySrc = img.attr("data-lazy-src")
+                        if (!lazySrc.isNullOrEmpty()) {
+                            lazySrc
+                        } else {
+                            img.attr("src").takeIf { !it.isNullOrEmpty() }
+                                ?: element.selectFirst(".image")?.getImageUrl()
+                                ?: element.selectFirst(".poster")?.getImageUrl()
+                        }
+                    }
             }
         }
         return AnimesPage(animeList, nextPage)
